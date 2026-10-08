@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MCT Notes</title>
 <meta name="theme-color" content="#f5f6f8">
+<meta name="description" content="Catatan mesin MCT: program, alarm, pemasangan pallet, catatan dan foto.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MCT Notes">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f6f8;--surface:#fff;--surface2:#eef1f5;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--primary:#2563eb;--primary-ink:#fff;--primary-soft:#dbeafe;--danger:#dc2626;--danger-soft:#fee2e2;--warn:#b45309;--warn-soft:#fef3c7;--ok:#047857;--ok-soft:#d1fae5;--mark:#fde68a;--shadow:0 1px 2px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.07);--radius:14px;color-scheme:light}
@@ -174,6 +183,15 @@ mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
 .auth-top{display:flex;justify-content:space-between;align-items:center}
 .auth-logo{width:52px;height:52px;border-radius:16px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
 .auth-logo .ic{width:28px;height:28px}
+.brand-logo{width:26px;height:26px;border-radius:7px;flex:none;display:block}
+.auth-logo.img{background:none;overflow:hidden}
+.auth-logo.img img{width:100%;height:100%;display:block}
+.install-btn{color:var(--primary)}
+.ios-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.ios-steps li{line-height:1.5}
+.ios-steps .ic{width:18px;height:18px;vertical-align:-3px;color:var(--primary)}
+.install-hero{display:flex;gap:12px;align-items:center}
+.install-hero img{width:56px;height:56px;border-radius:14px}
 .linkbtn{border:0;background:none;color:var(--primary);cursor:pointer;padding:0;font-size:13px;text-align:left}
 .errbox{background:var(--danger-soft);color:var(--danger);padding:10px 12px;border-radius:10px;font-size:14px}
 .loading{display:grid;place-items:center;gap:12px;padding:60px;color:var(--muted)}
@@ -232,7 +250,11 @@ const I18N = {
     loadFail: 'Gagal memuat data. Pastikan skrip SQL sudah dijalankan di Supabase.', retry: 'Coba lagi', notFound: 'Data tidak ditemukan.',
     all: 'Semua', theme: 'Tema', darkMode: 'Mode gelap', lightMode: 'Mode terang', open: 'Buka', loggedAs: 'Masuk sebagai',
     type_machine: 'Mesin', type_program: 'Program', type_alarm: 'Alarm', type_machine_note: 'Catatan Mesin',
-    type_pallet: 'Pallet', type_program_note: 'Catatan Program', type_note: 'Catatan'
+    type_pallet: 'Pallet', type_program_note: 'Catatan Program', type_note: 'Catatan',
+    install: 'Install Aplikasi', installTitle: 'Install di perangkat ini', installDesc: 'Buka MCT Notes seperti aplikasi biasa dari layar utama, tanpa bilah browser.',
+    iosStep1: 'Ketuk tombol {icon} Bagikan di Safari.', iosStep2: 'Pilih "Tambah ke Layar Utama".', iosStep3: 'Ketuk "Tambah".',
+    manualInstall: 'Buka menu browser (⋮), lalu pilih "Install aplikasi" atau "Tambahkan ke layar utama".', installed: 'Aplikasi berhasil di-install',
+    updateReady: 'Versi baru tersedia', reload: 'Muat ulang'
   },
   ko: {
     appName: 'MCT 기계 노트', search: '전체 검색…', machines: '기계', programs: '프로그램', alarms: '알람',
@@ -253,7 +275,11 @@ const I18N = {
     loadFail: '데이터를 불러오지 못했습니다. Supabase에서 SQL 스크립트를 실행했는지 확인하세요.', retry: '다시 시도', notFound: '데이터를 찾을 수 없습니다.',
     all: '전체', theme: '테마', darkMode: '다크 모드', lightMode: '라이트 모드', open: '열기', loggedAs: '로그인 계정',
     type_machine: '기계', type_program: '프로그램', type_alarm: '알람', type_machine_note: '기계 메모',
-    type_pallet: '팔레트', type_program_note: '프로그램 메모', type_note: '메모'
+    type_pallet: '팔레트', type_program_note: '프로그램 메모', type_note: '메모',
+    install: '앱 설치', installTitle: '이 기기에 설치', installDesc: '브라우저 주소창 없이 홈 화면에서 일반 앱처럼 MCT Notes를 실행합니다.',
+    iosStep1: 'Safari에서 {icon} 공유 버튼을 탭하세요.', iosStep2: '"홈 화면에 추가"를 선택하세요.', iosStep3: '"추가"를 탭하세요.',
+    manualInstall: '브라우저 메뉴(⋮)를 열고 "앱 설치" 또는 "홈 화면에 추가"를 선택하세요.', installed: '앱이 설치되었습니다',
+    updateReady: '새 버전이 있습니다', reload: '새로고침'
   }
 };
 let lang = LS.get('mct_lang', 'id');
@@ -289,6 +315,8 @@ const ICONS = {
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   link: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
   pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
   db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
 };
 const ic = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -392,7 +420,7 @@ function renderSetup(errMsg) {
 function renderLogin() {
   const cfg = getConfig();
   $('#app').innerHTML = `<div class="auth"><form class="auth-card" id="loginForm">
-    <div class="auth-top"><div class="auth-logo">${ic('machine')}</div><div class="actions">${langSeg()}${themeBtn()}</div></div>
+    <div class="auth-top"><div class="auth-logo img"><img src="icons/icon-192.png" alt=""></div><div class="actions">${langSeg()}${themeBtn()}</div></div>
     <h1>${esc(t('appName'))}</h1>
     <div id="loginErr"></div>
     <div class="field"><label>${esc(t('email'))}</label><input name="email" type="email" required autocomplete="username"></div>
@@ -669,6 +697,7 @@ function openMenu() {
     <div class="modal-body">
       ${S.user ? `<div class="muted small">${esc(t('loggedAs'))}: <b>${esc(S.user.email || '')}</b></div>` : ''}
       <div class="menu-list">
+        ${canShowInstall() ? `<button class="btn" data-act="install">${ic('download')}${esc(t('install'))}</button>` : ''}
         <button class="btn" data-act="refresh">${ic('refresh')}${esc(t('refresh'))}</button>
         <button class="btn" data-act="theme">${ic(effectiveTheme() === 'dark' ? 'sun' : 'moon')}${esc(effectiveTheme() === 'dark' ? t('lightMode') : t('darkMode'))}</button>
         ${cfg && !cfg.fixed ? `<button class="btn" data-act="reset-config">${ic('db')}${esc(t('resetConfig'))}</button>` : ''}
@@ -903,8 +932,8 @@ function renderShell(keep) {
   const qv = parts[0] === 'search' ? (params.get('q') || '') : '';
   $('#app').innerHTML = `<header class="topbar">
     <div class="bar"><button class="icon-btn" id="btnBack" data-act="back" aria-label="${esc(t('back'))}">${ic('back')}</button>
-      <a href="#/" class="brand">${ic('machine')}<span>${esc(t('appName'))}</span></a><div class="spacer"></div>
-      ${langSeg()}${themeBtn()}<button class="icon-btn" data-act="menu" aria-label="${esc(t('menu'))}">${ic('menu')}</button></div>
+      <a href="#/" class="brand"><img class="brand-logo" src="icons/icon.svg" alt=""><span>${esc(t('appName'))}</span></a><div class="spacer"></div>
+      ${installBtn()}${langSeg()}${themeBtn()}<button class="icon-btn" data-act="menu" aria-label="${esc(t('menu'))}">${ic('menu')}</button></div>
     <div class="searchrow"><label class="searchbox">${ic('search')}<input id="q" type="search" enterkeyhint="search" autocomplete="off" placeholder="${esc(t('search'))}" value="${esc(qv)}">
       <button class="icon-btn" id="qClear" type="button" aria-label="${esc(t('close'))}" ${qv ? '' : 'hidden'}>${ic('x')}</button></label></div>
   </header><main id="main"></main>`;
@@ -973,6 +1002,8 @@ document.addEventListener('click', e => {
     case 'refresh': closeModal(); loadAll(); break;
     case 'logout': closeModal(); sb.auth.signOut(); break;
     case 'reset-config': resetConfig(); break;
+    case 'install': closeModal(); doInstall(); break;
+    case 'reload-app': location.reload(); break;
   }
 });
 document.addEventListener('keydown', e => {
@@ -984,6 +1015,43 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('hashchange', () => { if (screen === 'app') { closeLB(); render(); } });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (!LS.get('mct_theme', null)) { applyTheme(); rerender(); } });
+
+/* ---------------- PWA: install & service worker ---------------- */
+let installEvt = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const canShowInstall = () => !isStandalone() && (!!installEvt || isIOS());
+const installBtn = () => canShowInstall() ? `<button class="icon-btn install-btn" data-act="install" title="${esc(t('install'))}" aria-label="${esc(t('install'))}">${ic('download')}</button>` : '';
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; rerender(); });
+window.addEventListener('appinstalled', () => { installEvt = null; toast(t('installed')); rerender(); });
+async function doInstall() {
+  if (installEvt) {
+    const ev = installEvt;
+    ev.prompt();
+    try { await ev.userChoice; } catch {}
+    installEvt = null; rerender();
+    return;
+  }
+  const steps = isIOS()
+    ? `<ol class="ios-steps"><li>${t('iosStep1', { icon: ic('share') })}</li><li>${esc(t('iosStep2'))}</li><li>${esc(t('iosStep3'))}</li></ol>`
+    : `<p style="margin:0">${esc(t('manualInstall'))}</p>`;
+  showModal(`<div class="overlay" data-overlay><div class="modal sm">
+    <div class="modal-head"><h2>${esc(t('installTitle'))}</h2><button type="button" class="icon-btn" data-close>${ic('x')}</button></div>
+    <div class="modal-body"><div class="install-hero"><img src="icons/icon-192.png" alt=""><div><b>${esc(t('appName'))}</b><div class="muted small">${esc(t('installDesc'))}</div></div></div>${steps}</div>
+  </div></div>`);
+}
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw && nw.addEventListener('statechange', () => {
+          if (nw.state === 'activated' && navigator.serviceWorker.controller) toast(t('updateReady') + ' — ' + t('reload'), '', false);
+        });
+      });
+    }).catch(err => console.warn('SW', err));
+  });
+}
 
 boot();
 </script>
