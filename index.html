@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MCT Notes</title>
+<meta name="theme-color" content="#f5f6f8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface2:#eef1f5;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--primary:#2563eb;--primary-ink:#fff;--primary-soft:#dbeafe;--danger:#dc2626;--danger-soft:#fee2e2;--warn:#b45309;--warn-soft:#fef3c7;--ok:#047857;--ok-soft:#d1fae5;--mark:#fde68a;--shadow:0 1px 2px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.07);--radius:14px;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b1120;--surface:#111827;--surface2:#1e293b;--text:#e5e7eb;--muted:#94a3b8;--border:#263244;--primary:#60a5fa;--primary-ink:#0b1120;--primary-soft:#172b4d;--danger:#f87171;--danger-soft:#3b1a1d;--warn:#fbbf24;--warn-soft:#3a2d10;--ok:#34d399;--ok-soft:#0c3329;--mark:#a16207;--shadow:0 6px 20px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1120;--surface:#111827;--surface2:#1e293b;--text:#e5e7eb;--muted:#94a3b8;--border:#263244;--primary:#60a5fa;--primary-ink:#0b1120;--primary-soft:#172b4d;--danger:#f87171;--danger-soft:#3b1a1d;--warn:#fbbf24;--warn-soft:#3a2d10;--ok:#34d399;--ok-soft:#0c3329;--mark:#a16207;--shadow:0 6px 20px rgba(0,0,0,.35);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body.lock{overflow:hidden}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.ic{width:18px;height:18px;flex:none}
+.ic.big{width:40px;height:40px;opacity:.45}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top)}
+.bar,.searchrow{max-width:960px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:8px}
+.searchrow{padding-top:2px;padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;min-width:0}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .ic{color:var(--primary)}
+.spacer{flex:1}
+.icon-btn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;border:0;background:transparent;cursor:pointer;color:var(--text);flex:none}
+.icon-btn:hover{background:var(--surface2)}
+.icon-btn.danger{color:var(--danger)}
+.seg{display:inline-flex;background:var(--surface2);border-radius:10px;padding:3px;gap:2px;flex:none}
+.seg button{border:0;background:transparent;padding:5px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 4px 0 12px;height:44px}
+.searchbox:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.searchbox input{flex:1;border:0;outline:0;background:transparent;height:100%;min-width:0;font-size:16px}
+.searchbox>.ic{color:var(--muted)}
+input[type=search]::-webkit-search-cancel-button{display:none}
+main{max-width:960px;margin:0 auto;padding:16px 16px calc(48px + env(safe-area-inset-bottom))}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--danger)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.sm{height:34px;padding:0 10px;font-size:13px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.6;cursor:default}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+h1{font-size:22px;margin:0;line-height:1.25;word-break:break-word}
+h2{font-size:17px;margin:0}
+.count{color:var(--muted);font-weight:500;font-size:.75em;margin-left:4px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.mcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.cover{aspect-ratio:16/10;background:var(--surface2);display:grid;place-items:center;color:var(--muted)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.mbody{padding:12px 14px}
+.mtitle{font-weight:700;font-size:16px;word-break:break-word}
+.stats{display:flex;gap:12px;margin-top:6px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.stats span{display:inline-flex;align-items:center;gap:4px}
+.stats .ic{width:15px;height:15px}
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.mbody{padding:10px}.mtitle{font-size:15px}}
+.crumbs{font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a:hover{color:var(--primary)}
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.hero-main{min-width:0;flex:1}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);margin-bottom:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:var(--surface2);font-size:13px;color:var(--muted)}
+.chip .ic{width:14px;height:14px}
+a.chip:hover{color:var(--primary)}
+.desc{margin:10px 0 0;white-space:pre-wrap;word-break:break-word}
+.hero-actions{display:flex;gap:2px;flex:none}
+.tabs{display:flex;gap:2px;overflow-x:auto;margin:14px 0;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:transparent;padding:10px 12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;gap:6px;align-items:center}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.tab .n{font-size:12px;background:var(--surface2);border-radius:999px;padding:0 7px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.row:hover{border-color:var(--primary)}
+.row>.ic{color:var(--muted)}
+.thumb{width:56px;height:56px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;overflow:hidden;flex:none;color:var(--muted)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.row-main{flex:1;min-width:0}
+.row-title{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap;word-break:break-word}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--primary-soft);color:var(--primary);white-space:nowrap}
+.kind-alarm .code{background:var(--danger-soft);color:var(--danger)}
+.kind-pallet .code{background:var(--ok-soft);color:var(--ok)}
+.prog-code{background:var(--warn-soft);color:var(--warn)}
+.entry{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;scroll-margin:140px}
+.entry.flash{animation:flash 1.8s ease}
+@keyframes flash{0%,45%{box-shadow:0 0 0 3px var(--primary)}100%{box-shadow:0 0 0 0 transparent}}
+.entry-head{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:0;background:transparent;text-align:left;cursor:pointer}
+.entry-title{flex:1;font-weight:600;min-width:0;word-break:break-word}
+.entry-meta{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:13px;flex:none}
+.entry-meta .ic{width:15px;height:15px}
+.chev{transition:transform .2s}
+.entry.open .chev{transform:rotate(90deg)}
+.entry-snippet{padding:0 14px 12px;color:var(--muted);font-size:14px;margin-top:-6px}
+.entry-body{padding:0 14px 14px}
+.content{white-space:pre-wrap;word-break:break-word;line-height:1.65}
+.entry-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.actions{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:10px}
+.gallery:empty{display:none}
+.gallery.big{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:0}
+@media (max-width:520px){.gallery.big{grid-template-columns:repeat(3,1fr);gap:4px}}
+.gimg{padding:0;border:0;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--surface2);cursor:zoom-in}
+.gimg img{width:100%;height:100%;object-fit:cover;display:block}
+.empty{text-align:center;padding:36px 16px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius)}
+.empty p{margin:8px 0 0}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.fchip{border:1px solid var(--border);background:var(--surface);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.fchip.on{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.result{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.result:hover{border-color:var(--primary)}
+.badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex:none;background:var(--surface2);color:var(--muted);margin-top:2px}
+.b-machine{background:var(--primary-soft);color:var(--primary)}
+.b-alarm{background:var(--danger-soft);color:var(--danger)}
+.b-pallet{background:var(--ok-soft);color:var(--ok)}
+.b-program{background:var(--warn-soft);color:var(--warn)}
+.r-main{flex:1;min-width:0}
+.r-title{font-weight:600;word-break:break-word}
+.crumb{font-size:12px;color:var(--muted)}
+.r-snip{font-size:14px;color:var(--muted);margin-top:4px;word-break:break-word}
+.result .thumb{width:48px;height:48px}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .15s}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:560px;max-height:calc(100dvh - 32px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal.sm{max-width:380px}
+@media(max-width:600px){.overlay{align-items:flex-end;padding:0}.modal,.modal.sm{border-radius:18px 18px 0 0;max-height:94dvh;max-width:none}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 12px 12px 16px;border-bottom:1px solid var(--border)}
+.modal-body{padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-foot{display:flex;align-items:center;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border)}
+.modal-foot .progress{flex:1;min-width:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+.field input,.field textarea{border:1px solid var(--border);background:var(--bg);border-radius:10px;padding:10px 12px;font-size:16px;outline:0;width:100%}
+.field textarea{min-height:150px;resize:vertical;line-height:1.55}
+.field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.req{color:var(--danger)}
+.imgmgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
+.imgmgr:empty{display:none}
+.imi{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--surface2)}
+.imi img{width:100%;height:100%;object-fit:cover;display:block}
+.imi.new::after{content:'NEW';position:absolute;left:4px;bottom:4px;font-size:10px;font-weight:700;background:var(--primary);color:var(--primary-ink);padding:1px 5px;border-radius:4px}
+.imi button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+.imi button .ic{width:14px;height:14px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.menu-list{display:flex;flex-direction:column;gap:6px}
+.menu-list .btn{justify-content:flex-start;height:46px}
+.lb{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column;color:#fff;animation:fade .15s}
+.lb-top{display:flex;justify-content:space-between;align-items:center;padding:calc(8px + env(safe-area-inset-top)) 8px 8px 16px;font-weight:600}
+.lb-top .icon-btn{color:#fff}
+.lb-top .icon-btn:hover{background:rgba(255,255,255,.14)}
+.lb-stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding-bottom:env(safe-area-inset-bottom)}
+.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center}
+.lb-prev{left:12px}.lb-next{right:12px}
+@media(max-width:600px){.lb-nav{display:none}}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:calc(100% - 32px);text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#toast.error{background:var(--danger);color:#fff}
+.auth{min-height:100dvh;display:grid;place-items:center;padding:20px}
+.auth-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.auth-top{display:flex;justify-content:space-between;align-items:center}
+.auth-logo{width:52px;height:52px;border-radius:16px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.auth-logo .ic{width:28px;height:28px}
+.linkbtn{border:0;background:none;color:var(--primary);cursor:pointer;padding:0;font-size:13px;text-align:left}
+.errbox{background:var(--danger-soft);color:var(--danger);padding:10px 12px;border-radius:10px;font-size:14px}
+.loading{display:grid;place-items:center;gap:12px;padding:60px;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fade{from{opacity:0}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast"></div>
+<script>
+/* =====================================================================
+   KONFIGURASI SUPABASE
+   Isi 2 baris di bawah agar semua perangkat langsung terhubung.
+   Jika dikosongkan, aplikasi akan meminta URL & key saat pertama dibuka.
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://tnsoroccmfmqgvditagn.supabase.co',       // contoh: 'https://abcdefgh.supabase.co'
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuc29yb2NjbWZtcWd2ZGl0YWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NTYyMDMsImV4cCI6MjEwNzAzMjIwM30.6DYY5zp-9hEY-yqUK3I5LGx4SvzMJDN3rhFWEUln-vY'   // Project Settings → API → anon public key
+};
+const BUCKET = 'mct-images';
+
+/* ---------------- Utilitas ---------------- */
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const norm = s => String(s ?? '').toLowerCase().normalize('NFKC');
+const natSort = (a, b) => String(a ?? '').localeCompare(String(b ?? ''), undefined, { numeric: true, sensitivity: 'base' });
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+
+/* ---------------- Bahasa ---------------- */
+const I18N = {
+  id: {
+    appName: 'Catatan Mesin MCT', search: 'Cari di semua data…', machines: 'Mesin', programs: 'Program', alarms: 'Alarm',
+    notes: 'Catatan', photos: 'Foto', pallets: 'Pemasangan Pallet', gallery: 'Galeri', camera: 'Kamera',
+    addFmt: 'Tambah {x}', editFmt: 'Edit {x}', name: 'Nama', model: 'Model / Tipe', location: 'Lokasi', description: 'Keterangan',
+    programNo: 'No. Program', alarmCode: 'Kode Alarm', alarmTitle: 'Nama / Pesan Alarm', alarmContent: 'Penyebab & Solusi',
+    palletNo: 'No. Pallet / Posisi', palletContent: 'Detail pemasangan (jig, clamp, offset, urutan, dll)', title: 'Judul', content: 'Isi catatan',
+    save: 'Simpan', cancel: 'Batal', edit: 'Edit', delete: 'Hapus', back: 'Kembali', close: 'Tutup',
+    confirmDelete: 'Hapus "{name}"?\nSemua data dan foto di dalamnya ikut terhapus permanen.', confirmDeletePhoto: 'Hapus foto ini?',
+    empty: 'Belum ada data.', emptyMachines: 'Belum ada mesin. Tambahkan mesin pertama.', noResults: 'Tidak ada hasil untuk "{q}"',
+    results: '{n} hasil', searchHint: 'Ketik nama mesin, no. program, kode alarm, pallet, atau isi catatan.',
+    saving: 'Menyimpan…', uploading: 'Mengunggah foto {i}/{n}…', saved: 'Tersimpan', deleted: 'Terhapus', error: 'Terjadi kesalahan: {msg}',
+    login: 'Masuk', logout: 'Keluar', email: 'Email', password: 'Password', loginFail: 'Gagal masuk: {msg}',
+    loginHint: 'Akun dibuat oleh admin di Supabase → Authentication → Users.',
+    setupTitle: 'Hubungkan ke Supabase', setupHint: 'Isi Project URL dan anon key dari Supabase → Project Settings → API.',
+    connect: 'Hubungkan', resetConfig: 'Ganti koneksi Supabase', configFixed: 'Koneksi diatur di dalam file index.html.',
+    required: '{f} wajib diisi', updated: 'Diperbarui {d}', loading: 'Memuat…', refresh: 'Muat ulang data', menu: 'Menu',
+    loadFail: 'Gagal memuat data. Pastikan skrip SQL sudah dijalankan di Supabase.', retry: 'Coba lagi', notFound: 'Data tidak ditemukan.',
+    all: 'Semua', theme: 'Tema', darkMode: 'Mode gelap', lightMode: 'Mode terang', open: 'Buka', loggedAs: 'Masuk sebagai',
+    type_machine: 'Mesin', type_program: 'Program', type_alarm: 'Alarm', type_machine_note: 'Catatan Mesin',
+    type_pallet: 'Pallet', type_program_note: 'Catatan Program', type_note: 'Catatan'
+  },
+  ko: {
+    appName: 'MCT 기계 노트', search: '전체 검색…', machines: '기계', programs: '프로그램', alarms: '알람',
+    notes: '메모', photos: '사진', pallets: '팔레트 세팅', gallery: '갤러리', camera: '카메라',
+    addFmt: '{x} 추가', editFmt: '{x} 수정', name: '이름', model: '모델 / 기종', location: '위치', description: '설명',
+    programNo: '프로그램 번호', alarmCode: '알람 코드', alarmTitle: '알람 이름 / 메시지', alarmContent: '원인 및 조치',
+    palletNo: '팔레트 번호 / 위치', palletContent: '세팅 내용 (지그, 클램프, 오프셋, 순서 등)', title: '제목', content: '내용',
+    save: '저장', cancel: '취소', edit: '수정', delete: '삭제', back: '뒤로', close: '닫기',
+    confirmDelete: '"{name}"을(를) 삭제할까요?\n포함된 모든 데이터와 사진이 영구 삭제됩니다.', confirmDeletePhoto: '이 사진을 삭제할까요?',
+    empty: '데이터가 없습니다.', emptyMachines: '등록된 기계가 없습니다. 첫 기계를 추가하세요.', noResults: '"{q}"에 대한 결과가 없습니다',
+    results: '결과 {n}개', searchHint: '기계 이름, 프로그램 번호, 알람 코드, 팔레트, 메모 내용을 입력하세요.',
+    saving: '저장 중…', uploading: '사진 업로드 중 {i}/{n}…', saved: '저장되었습니다', deleted: '삭제되었습니다', error: '오류: {msg}',
+    login: '로그인', logout: '로그아웃', email: '이메일', password: '비밀번호', loginFail: '로그인 실패: {msg}',
+    loginHint: '계정은 관리자가 Supabase → Authentication → Users 에서 생성합니다.',
+    setupTitle: 'Supabase 연결', setupHint: 'Supabase → Project Settings → API 에서 Project URL과 anon key를 입력하세요.',
+    connect: '연결', resetConfig: 'Supabase 연결 변경', configFixed: '연결 정보는 index.html 파일 안에 설정되어 있습니다.',
+    required: '{f}을(를) 입력하세요', updated: '수정 {d}', loading: '불러오는 중…', refresh: '데이터 새로고침', menu: '메뉴',
+    loadFail: '데이터를 불러오지 못했습니다. Supabase에서 SQL 스크립트를 실행했는지 확인하세요.', retry: '다시 시도', notFound: '데이터를 찾을 수 없습니다.',
+    all: '전체', theme: '테마', darkMode: '다크 모드', lightMode: '라이트 모드', open: '열기', loggedAs: '로그인 계정',
+    type_machine: '기계', type_program: '프로그램', type_alarm: '알람', type_machine_note: '기계 메모',
+    type_pallet: '팔레트', type_program_note: '프로그램 메모', type_note: '메모'
+  }
+};
+let lang = LS.get('mct_lang', 'id');
+if (!I18N[lang]) lang = 'id';
+function t(k, vars) {
+  let s = I18N[lang][k] ?? I18N.id[k] ?? k;
+  if (vars) for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(b);
+  return s;
+}
+const fmtDate = d => d ? new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(d)) : '';
+
+/* ---------------- Ikon ---------------- */
+const ICONS = {
+  back: '<path d="M15 18l-6-6 6-6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+  menu: '<path d="M3 6h18M3 12h18M3 18h18"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  chevron: '<path d="m9 18 6-6-6-6"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  machine: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4M6 7h5M6 11h12"/>',
+  alarm: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  note: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  program: '<path d="m8 9-4 3 4 3M16 9l4 3-4 3M13.5 5l-3 14"/>',
+  pallet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  link: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
+};
+const ic = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+
+/* ---------------- Tema ---------------- */
+function effectiveTheme() {
+  const th = LS.get('mct_theme', null);
+  if (th) return th;
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyTheme() {
+  const th = LS.get('mct_theme', null);
+  if (th) document.documentElement.dataset.theme = th; else delete document.documentElement.dataset.theme;
+  const m = document.querySelector('meta[name=theme-color]');
+  if (m) m.content = effectiveTheme() === 'dark' ? '#0b1120' : '#f5f6f8';
+}
+function toggleTheme() { LS.set('mct_theme', effectiveTheme() === 'dark' ? 'light' : 'dark'); applyTheme(); rerender(); }
+const themeBtn = () => `<button class="icon-btn" data-act="theme" title="${esc(effectiveTheme() === 'dark' ? t('lightMode') : t('darkMode'))}">${ic(effectiveTheme() === 'dark' ? 'sun' : 'moon')}</button>`;
+const langSeg = () => `<div class="seg"><button data-act="lang" data-v="id" class="${lang === 'id' ? 'on' : ''}">ID</button><button data-act="lang" data-v="ko" class="${lang === 'ko' ? 'on' : ''}">한국어</button></div>`;
+function setLang(v) {
+  if (!I18N[v]) return;
+  lang = v; LS.set('mct_lang', v);
+  document.documentElement.lang = v; document.title = t('appName');
+  rerender();
+}
+
+/* ---------------- State ---------------- */
+let sb = null, screen = 'boot';
+const S = { machines: [], programs: [], entries: [], open: new Set(), searchType: 'all', loaded: false, loadError: null, user: null };
+const TABLES = () => ({ machines: S.machines, programs: S.programs, entries: S.entries });
+const kindTable = k => k === 'machine' ? 'machines' : k === 'program' ? 'programs' : 'entries';
+const getRow = (table, id) => (TABLES()[table] || []).find(r => r.id === id);
+const fixRow = r => ({ ...r, images: Array.isArray(r.images) ? r.images : [] });
+function replaceLocal(table, row) {
+  const arr = TABLES()[table]; const i = arr.findIndex(r => r.id === row.id);
+  if (i >= 0) arr[i] = fixRow(row); else arr.push(fixRow(row));
+}
+const imgUrl = path => sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+const progLabel = p => p ? [p.number, p.name].filter(Boolean).join(' · ') : '';
+
+/* ---------------- Toast ---------------- */
+let toastTimer;
+function toast(msg, type = '', sticky = false) {
+  const el = $('#toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  if (!sticky) toastTimer = setTimeout(() => el.className = '', type === 'error' ? 4500 : 2200);
+}
+
+/* ---------------- Boot / Auth ---------------- */
+function getConfig() {
+  if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) return { url: CONFIG.SUPABASE_URL.trim(), key: CONFIG.SUPABASE_ANON_KEY.trim(), fixed: true };
+  const c = LS.get('mct_cfg', null);
+  return c && c.url && c.key ? c : null;
+}
+async function boot() {
+  applyTheme();
+  document.documentElement.lang = lang; document.title = t('appName');
+  const cfg = getConfig();
+  if (!cfg) { screen = 'setup'; return renderSetup(); }
+  try {
+    sb = window.supabase.createClient(cfg.url, cfg.key);
+  } catch (err) { screen = 'setup'; return renderSetup(err.message); }
+  sb.auth.onAuthStateChange(ev => {
+    if (ev === 'SIGNED_OUT') { S.loaded = false; S.user = null; screen = 'login'; closeModal(); renderLogin(); }
+  });
+  let session = null;
+  try { session = (await sb.auth.getSession()).data.session; } catch {}
+  if (!session) { screen = 'login'; return renderLogin(); }
+  startApp(session);
+}
+function startApp(session) {
+  S.user = session.user; screen = 'app';
+  renderShell(); loadAll();
+}
+function rerender() {
+  if (screen === 'setup') renderSetup();
+  else if (screen === 'login') renderLogin();
+  else if (screen === 'app') renderShell(true);
+}
+
+function renderSetup(errMsg) {
+  const c = LS.get('mct_cfg', {}) || {};
+  $('#app').innerHTML = `<div class="auth"><form class="auth-card" id="setupForm">
+    <div class="auth-top"><div class="auth-logo">${ic('db')}</div><div class="actions">${langSeg()}${themeBtn()}</div></div>
+    <h1>${esc(t('setupTitle'))}</h1>
+    <p class="muted small" style="margin:0">${esc(t('setupHint'))}</p>
+    ${errMsg ? `<div class="errbox">${esc(errMsg)}</div>` : ''}
+    <div class="field"><label>Project URL</label><input name="url" type="url" required placeholder="https://xxxx.supabase.co" value="${esc(c.url || '')}"></div>
+    <div class="field"><label>anon public key</label><input name="key" required placeholder="eyJhbGciOi…" value="${esc(c.key || '')}"></div>
+    <button class="btn primary block">${esc(t('connect'))}</button>
+  </form></div>`;
+  $('#setupForm').onsubmit = e => {
+    e.preventDefault();
+    const f = e.target;
+    const url = f.url.value.trim().replace(/\/+$/, ''), key = f.key.value.trim();
+    if (!/^https?:\/\//.test(url) || !key) return;
+    LS.set('mct_cfg', { url, key }); boot();
+  };
+}
+function renderLogin() {
+  const cfg = getConfig();
+  $('#app').innerHTML = `<div class="auth"><form class="auth-card" id="loginForm">
+    <div class="auth-top"><div class="auth-logo">${ic('machine')}</div><div class="actions">${langSeg()}${themeBtn()}</div></div>
+    <h1>${esc(t('appName'))}</h1>
+    <div id="loginErr"></div>
+    <div class="field"><label>${esc(t('email'))}</label><input name="email" type="email" required autocomplete="username"></div>
+    <div class="field"><label>${esc(t('password'))}</label><input name="password" type="password" required autocomplete="current-password"></div>
+    <button class="btn primary block" id="btnLogin">${esc(t('login'))}</button>
+    <p class="muted small" style="margin:0">${esc(t('loginHint'))}</p>
+    ${cfg && !cfg.fixed ? `<button type="button" class="linkbtn" data-act="reset-config">${esc(t('resetConfig'))}</button>` : ''}
+  </form></div>`;
+  $('#loginForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, btn = $('#btnLogin');
+    btn.disabled = true;
+    const { data, error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+    btn.disabled = false;
+    if (error) { $('#loginErr').innerHTML = `<div class="errbox">${esc(t('loginFail', { msg: error.message }))}</div>`; return; }
+    startApp(data.session);
+  };
+}
+async function resetConfig() {
+  const cfg = getConfig();
+  if (cfg && cfg.fixed) return toast(t('configFixed'));
+  closeModal();
+  try { if (sb) await sb.auth.signOut(); } catch {}
+  LS.del('mct_cfg'); sb = null; screen = 'setup'; renderSetup();
+}
+
+/* ---------------- Data ---------------- */
+async function fetchAll(table) {
+  let all = [], from = 0; const size = 1000;
+  for (;;) {
+    const { data, error } = await sb.from(table).select('*').order('created_at', { ascending: true }).range(from, from + size - 1);
+    if (error) throw error;
+    all = all.concat(data);
+    if (data.length < size) break;
+    from += size;
+  }
+  return all.map(fixRow);
+}
+async function loadAll() {
+  S.loaded = false; S.loadError = null; render();
+  try {
+    const [m, p, e] = await Promise.all([fetchAll('machines'), fetchAll('programs'), fetchAll('entries')]);
+    S.machines = m; S.programs = p; S.entries = e; S.loaded = true;
+  } catch (err) { S.loadError = err.message || String(err); }
+  render();
+}
+
+/* ---------------- Gambar ---------------- */
+function pickFiles(camera) {
+  return new Promise(res => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    if (camera) inp.setAttribute('capture', 'environment'); else inp.multiple = true;
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    let done = false;
+    const finish = files => { if (done) return; done = true; res(files); setTimeout(() => inp.remove(), 0); };
+    inp.addEventListener('change', () => finish([...inp.files]));
+    inp.addEventListener('cancel', () => finish([]));
+    inp.click();
+  });
+}
+function loadImageEl(file) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 2000); };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('image')); };
+    im.src = u;
+  });
+}
+async function compress(file, max = 1600, q = 0.82) {
+  try {
+    let src;
+    try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { src = await loadImageEl(file); }
+    const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+    const s = Math.min(1, max / Math.max(w, h));
+    const c = document.createElement('canvas');
+    c.width = Math.round(w * s); c.height = Math.round(h * s);
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+    return blob && blob.size < file.size ? blob : (blob || file);
+  } catch { return file; }
+}
+async function uploadFiles(table, id, files, onProgress) {
+  const out = [];
+  try {
+    for (let i = 0; i < files.length; i++) {
+      onProgress && onProgress(i + 1, files.length);
+      const blob = await compress(files[i]);
+      const type = blob.type || 'image/jpeg';
+      const ext = (type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      const path = `${table}/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: type, cacheControl: '31536000', upsert: false });
+      if (error) throw error;
+      out.push({ path });
+    }
+  } catch (err) { removePaths(out.map(x => x.path)); throw err; }
+  return out;
+}
+async function removePaths(paths) {
+  paths = paths.filter(Boolean);
+  for (let i = 0; i < paths.length; i += 100) {
+    try { await sb.storage.from(BUCKET).remove(paths.slice(i, i + 100)); } catch (e) { console.warn(e); }
+  }
+}
+async function quickAddPhotos(table, id, camera) {
+  const files = await pickFiles(camera);
+  if (!files.length) return;
+  const row = getRow(table, id); if (!row) return;
+  let uploaded = [];
+  try {
+    uploaded = await uploadFiles(table, id, files, (i, n) => toast(t('uploading', { i, n }), '', true));
+    const images = [...row.images, ...uploaded];
+    const { data, error } = await sb.from(table).update({ images, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    if (error) throw error;
+    replaceLocal(table, data); render({ keepScroll: true }); toast(t('saved'));
+  } catch (err) {
+    removePaths(uploaded.map(x => x.path));
+    toast(t('error', { msg: err.message }), 'error');
+  }
+}
+async function deletePhoto(table, id, index) {
+  const row = getRow(table, id); if (!row) return;
+  const img = row.images[index]; if (!img) return;
+  if (!confirm(t('confirmDeletePhoto'))) return;
+  const images = row.images.filter((_, i) => i !== index);
+  const { data, error } = await sb.from(table).update({ images, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+  if (error) return toast(t('error', { msg: error.message }), 'error');
+  removePaths([img.path]);
+  replaceLocal(table, data); render({ keepScroll: true }); toast(t('deleted'));
+  if ($('#lb')) renderLB();
+}
+
+/* ---------------- Hapus record ---------------- */
+async function deleteRecord(table, id) {
+  const row = getRow(table, id); if (!row) return;
+  const name = table === 'programs' ? progLabel(row) : (row.name || row.title);
+  if (!confirm(t('confirmDelete', { name }))) return;
+  let paths = row.images.map(i => i.path);
+  if (table === 'machines') {
+    S.programs.filter(p => p.machine_id === id).forEach(p => paths.push(...p.images.map(i => i.path)));
+    S.entries.filter(e => e.machine_id === id).forEach(e => paths.push(...e.images.map(i => i.path)));
+  } else if (table === 'programs') {
+    S.entries.filter(e => e.program_id === id).forEach(e => paths.push(...e.images.map(i => i.path)));
+  }
+  const { error } = await sb.from(table).delete().eq('id', id);
+  if (error) return toast(t('error', { msg: error.message }), 'error');
+  if (table === 'machines') {
+    S.machines = S.machines.filter(r => r.id !== id);
+    S.programs = S.programs.filter(r => r.machine_id !== id);
+    S.entries = S.entries.filter(r => r.machine_id !== id);
+    location.hash = '/';
+  } else if (table === 'programs') {
+    S.programs = S.programs.filter(r => r.id !== id);
+    S.entries = S.entries.filter(r => r.program_id !== id);
+    location.hash = `/m/${row.machine_id}?tab=programs`;
+  } else {
+    S.entries = S.entries.filter(r => r.id !== id);
+    render({ keepScroll: true });
+  }
+  removePaths(paths);
+  toast(t('deleted'));
+}
+
+/* ---------------- Form tambah / edit ---------------- */
+const FORM_DEF = {
+  machine: [{ k: 'name', l: 'name', req: 1 }, { k: 'model', l: 'model' }, { k: 'location', l: 'location' }, { k: 'description', l: 'description', area: 1 }],
+  program: [{ k: 'number', l: 'programNo', ph: 'O1234' }, { k: 'name', l: 'name', req: 1 }, { k: 'description', l: 'description', area: 1 }],
+  alarm: [{ k: 'code', l: 'alarmCode', ph: 'EX1234' }, { k: 'title', l: 'alarmTitle', req: 1 }, { k: 'content', l: 'alarmContent', area: 1 }],
+  machine_note: [{ k: 'title', l: 'title', req: 1 }, { k: 'content', l: 'content', area: 1 }],
+  pallet: [{ k: 'code', l: 'palletNo', ph: 'P1' }, { k: 'title', l: 'title', req: 1 }, { k: 'content', l: 'palletContent', area: 1 }],
+  program_note: [{ k: 'title', l: 'title', req: 1 }, { k: 'content', l: 'content', area: 1 }]
+};
+let modalCleanup = null;
+function showModal(html, onClose) {
+  closeModal();
+  $('#modal-root').innerHTML = html;
+  document.body.classList.add('lock');
+  modalCleanup = onClose || null;
+}
+function closeModal() {
+  if (modalCleanup) { try { modalCleanup(); } catch {} modalCleanup = null; }
+  $('#modal-root').innerHTML = '';
+  if (!$('#lb')) document.body.classList.remove('lock');
+}
+
+function openForm(kind, row, ctx = {}) {
+  const fields = FORM_DEF[kind]; if (!fields) return;
+  const table = kindTable(kind), isNew = !row;
+  const st = { kept: [...(row?.images || [])], removed: [], files: [] };
+  const label = t('type_' + kind);
+  showModal(`<div class="overlay"><form class="modal" id="frm" novalidate>
+    <div class="modal-head"><h2>${esc(isNew ? t('addFmt', { x: label }) : t('editFmt', { x: label }))}</h2><button type="button" class="icon-btn" data-close aria-label="${esc(t('close'))}">${ic('x')}</button></div>
+    <div class="modal-body">
+      ${fields.map(f => `<div class="field"><label>${esc(t(f.l))}${f.req ? ' <span class="req">*</span>' : ''}</label>${f.area
+        ? `<textarea name="${f.k}" placeholder="${esc(f.ph || '')}">${esc(row?.[f.k] || '')}</textarea>`
+        : `<input name="${f.k}" placeholder="${esc(f.ph || '')}" value="${esc(row?.[f.k] || '')}" autocomplete="off">`}</div>`).join('')}
+      <div class="field"><label>${esc(t('photos'))}</label>
+        <div class="imgmgr" id="imgmgr"></div>
+        <div class="row-btns"><button type="button" class="btn sm" data-pick="gallery">${ic('image')}${esc(t('gallery'))}</button><button type="button" class="btn sm" data-pick="camera">${ic('camera')}${esc(t('camera'))}</button></div>
+      </div>
+    </div>
+    <div class="modal-foot"><span class="progress muted small" id="prog"></span><button type="button" class="btn ghost" data-close>${esc(t('cancel'))}</button><button type="submit" class="btn primary" id="btnSave">${esc(t('save'))}</button></div>
+  </form></div>`, () => st.files.forEach(f => URL.revokeObjectURL(f.url)));
+
+  const form = $('#frm');
+  const drawImgs = () => {
+    $('#imgmgr').innerHTML =
+      st.kept.map((im, i) => `<div class="imi"><img src="${esc(imgUrl(im.path))}" alt=""><button type="button" data-rm-kept="${i}">${ic('x')}</button></div>`).join('') +
+      st.files.map((f, i) => `<div class="imi new"><img src="${f.url}" alt=""><button type="button" data-rm-new="${i}">${ic('x')}</button></div>`).join('');
+  };
+  drawImgs();
+  form.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-close')) return closeModal();
+    if (b.dataset.pick) {
+      const files = await pickFiles(b.dataset.pick === 'camera');
+      files.forEach(file => st.files.push({ file, url: URL.createObjectURL(file) }));
+      drawImgs();
+    } else if (b.dataset.rmKept !== undefined) {
+      st.removed.push(...st.kept.splice(+b.dataset.rmKept, 1)); drawImgs();
+    } else if (b.dataset.rmNew !== undefined) {
+      const [f] = st.files.splice(+b.dataset.rmNew, 1); URL.revokeObjectURL(f.url); drawImgs();
+    }
+  });
+  setTimeout(() => form.querySelector(isNew ? 'input' : 'textarea, input')?.focus(), 50);
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const vals = {};
+    for (const f of fields) {
+      const v = form.elements[f.k].value.trim();
+      if (f.req && !v) { toast(t('required', { f: t(f.l) }), 'error'); form.elements[f.k].focus(); return; }
+      vals[f.k] = v || null;
+    }
+    const btn = $('#btnSave'), prog = $('#prog');
+    btn.disabled = true; prog.textContent = t('saving');
+    const id = row?.id || uuid();
+    let uploaded = [];
+    try {
+      uploaded = await uploadFiles(table, id, st.files.map(f => f.file), (i, n) => prog.textContent = t('uploading', { i, n }));
+      prog.textContent = t('saving');
+      const now = new Date().toISOString();
+      const images = [...st.kept, ...uploaded];
+      let res;
+      if (isNew) {
+        const payload = { id, ...vals, images, created_at: now, updated_at: now };
+        if (table === 'programs') payload.machine_id = ctx.machine_id;
+        if (table === 'entries') { payload.kind = kind; payload.machine_id = ctx.machine_id; payload.program_id = ctx.program_id || null; }
+        res = await sb.from(table).insert(payload).select().single();
+      } else {
+        res = await sb.from(table).update({ ...vals, images, updated_at: now }).eq('id', id).select().single();
+      }
+      if (res.error) throw res.error;
+      replaceLocal(table, res.data);
+      if (st.removed.length) removePaths(st.removed.map(x => x.path));
+      closeModal();
+      if (isNew && table === 'machines') location.hash = `/m/${id}`;
+      else if (isNew && table === 'programs') location.hash = `/p/${id}`;
+      else { if (table === 'entries') S.open.add(id); render({ keepScroll: true }); }
+      toast(t('saved'));
+    } catch (err) {
+      removePaths(uploaded.map(x => x.path));
+      toast(t('error', { msg: err.message }), 'error');
+      btn.disabled = false; prog.textContent = '';
+    }
+  };
+}
+
+function openMenu() {
+  const cfg = getConfig();
+  showModal(`<div class="overlay" data-overlay><div class="modal sm">
+    <div class="modal-head"><h2>${esc(t('menu'))}</h2><button type="button" class="icon-btn" data-close>${ic('x')}</button></div>
+    <div class="modal-body">
+      ${S.user ? `<div class="muted small">${esc(t('loggedAs'))}: <b>${esc(S.user.email || '')}</b></div>` : ''}
+      <div class="menu-list">
+        <button class="btn" data-act="refresh">${ic('refresh')}${esc(t('refresh'))}</button>
+        <button class="btn" data-act="theme">${ic(effectiveTheme() === 'dark' ? 'sun' : 'moon')}${esc(effectiveTheme() === 'dark' ? t('lightMode') : t('darkMode'))}</button>
+        ${cfg && !cfg.fixed ? `<button class="btn" data-act="reset-config">${ic('db')}${esc(t('resetConfig'))}</button>` : ''}
+        <button class="btn danger" data-act="logout">${ic('logout')}${esc(t('logout'))}</button>
+      </div>
+    </div></div></div>`);
+}
+
+/* ---------------- Lightbox ---------------- */
+const LB = { table: null, id: null, i: 0 };
+function openLightbox(table, id, i) { LB.table = table; LB.id = id; LB.i = i; renderLB(); }
+function closeLB() { $('#lb')?.remove(); if (!$('#modal-root').innerHTML) document.body.classList.remove('lock'); }
+function renderLB() {
+  const row = getRow(LB.table, LB.id); const imgs = row?.images || [];
+  if (!imgs.length) return closeLB();
+  LB.i = Math.max(0, Math.min(LB.i, imgs.length - 1));
+  let el = $('#lb');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'lb'; el.className = 'lb';
+    document.body.appendChild(el); document.body.classList.add('lock');
+    let sx = null;
+    el.addEventListener('touchstart', e => { sx = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    el.addEventListener('touchend', e => {
+      if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+      if (Math.abs(dx) > 50) { LB.i += dx < 0 ? 1 : -1; renderLB(); }
+    });
+    el.addEventListener('click', e => {
+      const b = e.target.closest('[data-lb]');
+      if (!b) { if (e.target.classList.contains('lb-stage')) closeLB(); return; }
+      const a = b.dataset.lb;
+      if (a === 'close') closeLB();
+      else if (a === 'prev') { LB.i--; renderLB(); }
+      else if (a === 'next') { LB.i++; renderLB(); }
+      else if (a === 'del') deletePhoto(LB.table, LB.id, LB.i);
+    });
+  }
+  const url = imgUrl(imgs[LB.i].path);
+  el.innerHTML = `<div class="lb-top"><span>${LB.i + 1} / ${imgs.length}</span><div class="actions">
+      <a class="icon-btn" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(t('open'))}">${ic('link')}</a>
+      <button class="icon-btn" data-lb="del" title="${esc(t('delete'))}">${ic('trash')}</button>
+      <button class="icon-btn" data-lb="close" title="${esc(t('close'))}">${ic('x')}</button></div></div>
+    <div class="lb-stage">${imgs.length > 1 ? `<button class="lb-nav lb-prev" data-lb="prev">${ic('left')}</button>` : ''}
+      <img src="${esc(url)}" alt="">
+      ${imgs.length > 1 ? `<button class="lb-nav lb-next" data-lb="next">${ic('chevron')}</button>` : ''}</div>`;
+}
+
+/* ---------------- Pencarian global ---------------- */
+function buildIndex() {
+  const mName = id => S.machines.find(m => m.id === id)?.name || '';
+  const pRow = id => S.programs.find(p => p.id === id);
+  const items = [];
+  for (const m of S.machines) items.push({
+    type: 'machine', group: 'machine', title: m.name, crumb: [m.model, m.location].filter(Boolean).join(' · '),
+    own: [m.name, m.model, m.location, m.description].join(' '), body: m.description || '', ctx: '', img: m.images[0], go: `/m/${m.id}`
+  });
+  for (const p of S.programs) items.push({
+    type: 'program', group: 'program', title: progLabel(p), crumb: mName(p.machine_id),
+    own: [p.number, p.name, p.description].join(' '), body: p.description || '', ctx: mName(p.machine_id), img: p.images[0], go: `/p/${p.id}`
+  });
+  for (const e of S.entries) {
+    const p = e.program_id ? pRow(e.program_id) : null;
+    const crumb = [mName(e.machine_id), p ? progLabel(p) : ''].filter(Boolean).join(' › ');
+    const go = e.kind === 'alarm' ? `/m/${e.machine_id}?tab=alarms&open=${e.id}`
+      : e.kind === 'machine_note' ? `/m/${e.machine_id}?tab=notes&open=${e.id}`
+      : e.kind === 'pallet' ? `/p/${e.program_id}?tab=pallets&open=${e.id}`
+      : `/p/${e.program_id}?tab=notes&open=${e.id}`;
+    items.push({
+      type: e.kind, group: e.kind.endsWith('note') ? 'note' : e.kind,
+      title: [e.code, e.title].filter(Boolean).join(' — '), crumb, own: [e.code, e.title, e.content].join(' '),
+      body: e.content || '', ctx: crumb, img: e.images[0], go
+    });
+  }
+  return items;
+}
+function search(q) {
+  const terms = norm(q).split(/\s+/).filter(Boolean);
+  if (!terms.length) return { terms, res: [] };
+  const res = [];
+  for (const it of buildIndex()) {
+    const own = norm(it.own), full = own + ' ' + norm(it.ctx), title = norm(it.title);
+    if (!terms.every(tm => full.includes(tm))) continue;
+    if (!terms.some(tm => own.includes(tm))) continue;
+    let score = 0;
+    for (const tm of terms) { if (title.includes(tm)) score += 3; if (title.startsWith(tm)) score += 2; if (own.includes(tm)) score += 1; }
+    if (it.type === 'machine') score += 1;
+    res.push({ ...it, score });
+  }
+  res.sort((a, b) => b.score - a.score || natSort(a.title, b.title));
+  return { terms, res };
+}
+function hl(text, terms) {
+  text = String(text ?? '');
+  if (!terms.length) return esc(text);
+  const re = new RegExp(terms.map(escRe).join('|'), 'gi');
+  let out = '', last = 0, m;
+  while ((m = re.exec(text))) {
+    if (!m[0]) { re.lastIndex++; continue; }
+    out += esc(text.slice(last, m.index)) + '<mark>' + esc(m[0]) + '</mark>';
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+function snippetOf(text, terms, len = 150) {
+  text = String(text || '').replace(/\s+/g, ' ').trim();
+  const low = text.toLowerCase(); let idx = -1;
+  for (const tm of terms) { const i = low.indexOf(tm); if (i >= 0 && (idx < 0 || i < idx)) idx = i; }
+  if (idx < 0) return text.slice(0, len) + (text.length > len ? '…' : '');
+  const start = Math.max(0, idx - 40);
+  return (start > 0 ? '…' : '') + text.slice(start, start + len) + (start + len < text.length ? '…' : '');
+}
+
+/* ---------------- Views ---------------- */
+const emptyBox = (msg, icon = 'note') => `<div class="empty">${ic(icon, 'big')}<p>${esc(msg)}</p></div>`;
+const photoBtns = (table, id) => `<button class="btn sm" data-act="add-photos" data-table="${table}" data-id="${id}" data-src="gallery">${ic('image')}${esc(t('gallery'))}</button><button class="btn sm" data-act="add-photos" data-table="${table}" data-id="${id}" data-src="camera">${ic('camera')}${esc(t('camera'))}</button>`;
+const gallery = (table, row, big) => `<div class="gallery ${big ? 'big' : ''}">${row.images.map((im, i) => `<button class="gimg" data-act="lightbox" data-table="${table}" data-id="${row.id}" data-i="${i}"><img loading="lazy" src="${esc(imgUrl(im.path))}" alt=""></button>`).join('')}</div>`;
+const tabsNav = (tabs, active) => `<nav class="tabs">${tabs.map(([k, label, n]) => `<button class="tab ${k === active ? 'on' : ''}" data-act="tab" data-tab="${k}">${esc(label)}<span class="n">${n}</span></button>`).join('')}</nav>`;
+const heroActions = (kind, row) => `<div class="hero-actions"><button class="icon-btn" data-act="edit" data-kind="${kind}" data-id="${row.id}" title="${esc(t('edit'))}">${ic('edit')}</button><button class="icon-btn danger" data-act="del" data-table="${kindTable(kind)}" data-id="${row.id}" title="${esc(t('delete'))}">${ic('trash')}</button></div>`;
+
+function viewHome() {
+  const list = [...S.machines].sort((a, b) => natSort(a.name, b.name));
+  return `<div class="section-head"><h1>${esc(t('machines'))}<span class="count">${list.length}</span></h1>
+    <button class="btn primary" data-act="add" data-kind="machine">${ic('plus')}${esc(t('addFmt', { x: t('type_machine') }))}</button></div>
+    ${list.length ? `<div class="grid">${list.map(m => {
+      const progs = S.programs.filter(p => p.machine_id === m.id).length;
+      const al = S.entries.filter(e => e.machine_id === m.id && e.kind === 'alarm').length;
+      const nt = S.entries.filter(e => e.machine_id === m.id && e.kind === 'machine_note').length;
+      return `<a class="mcard" href="#/m/${m.id}"><div class="cover">${m.images[0] ? `<img loading="lazy" src="${esc(imgUrl(m.images[0].path))}" alt="">` : ic('machine', 'big')}</div>
+        <div class="mbody"><div class="mtitle">${esc(m.name)}</div>${m.model || m.location ? `<div class="muted small">${esc([m.model, m.location].filter(Boolean).join(' · '))}</div>` : ''}
+        <div class="stats"><span title="${esc(t('programs'))}">${ic('program')}${progs}</span><span title="${esc(t('alarms'))}">${ic('alarm')}${al}</span><span title="${esc(t('notes'))}">${ic('note')}${nt}</span><span title="${esc(t('photos'))}">${ic('image')}${m.images.length}</span></div></div></a>`;
+    }).join('')}</div>` : emptyBox(t('emptyMachines'), 'machine')}`;
+}
+
+function entryCard(e) {
+  const open = S.open.has(e.id);
+  return `<article class="entry kind-${e.kind} ${open ? 'open' : ''}" id="e-${e.id}">
+    <button class="entry-head" data-act="toggle-entry" data-id="${e.id}">
+      ${e.code ? `<span class="code">${esc(e.code)}</span>` : ''}<span class="entry-title">${esc(e.title)}</span>
+      <span class="entry-meta">${e.images.length ? ic('image') + e.images.length : ''}${ic('chevron', 'chev')}</span></button>
+    ${!open && e.content ? `<div class="entry-snippet clamp">${esc(e.content)}</div>` : ''}
+    ${open ? `<div class="entry-body">${e.content ? `<div class="content">${esc(e.content)}</div>` : ''}${gallery('entries', e)}
+      <div class="entry-foot"><span class="muted small">${esc(t('updated', { d: fmtDate(e.updated_at || e.created_at) }))}</span>
+      <div class="actions">${photoBtns('entries', e.id)}<button class="icon-btn" data-act="edit" data-kind="${e.kind}" data-id="${e.id}" title="${esc(t('edit'))}">${ic('edit')}</button><button class="icon-btn danger" data-act="del" data-table="entries" data-id="${e.id}" title="${esc(t('delete'))}">${ic('trash')}</button></div></div></div>` : ''}
+  </article>`;
+}
+function entrySection(kind, items, mid, pid) {
+  return `<div class="toolbar"><span class="muted small">${items.length} ${esc(t('type_' + kind))}</span>
+    <button class="btn primary sm" data-act="add" data-kind="${kind}" data-mid="${mid}" data-pid="${pid || ''}">${ic('plus')}${esc(t('addFmt', { x: t('type_' + kind) }))}</button></div>
+    ${items.length ? `<div class="list">${items.map(entryCard).join('')}</div>` : emptyBox(t('empty'), kind === 'alarm' ? 'alarm' : kind === 'pallet' ? 'pallet' : 'note')}`;
+}
+function photoSection(table, row) {
+  return `<div class="toolbar"><span class="muted small">${row.images.length} ${esc(t('photos'))}</span><div class="actions">${photoBtns(table, row.id)}</div></div>
+    ${row.images.length ? gallery(table, row, true) : emptyBox(t('empty'), 'image')}`;
+}
+const byCode = (a, b) => natSort(a.code || '~', b.code || '~') || natSort(a.title, b.title);
+const byUpdated = (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
+
+function viewMachine(id, params) {
+  const m = S.machines.find(x => x.id === id);
+  if (!m) return emptyBox(t('notFound'), 'search');
+  const tab = params.get('tab') || 'programs';
+  const progs = S.programs.filter(p => p.machine_id === id).sort((a, b) => natSort(a.number || '~', b.number || '~') || natSort(a.name, b.name));
+  const alarms = S.entries.filter(e => e.machine_id === id && e.kind === 'alarm').sort(byCode);
+  const notes = S.entries.filter(e => e.machine_id === id && e.kind === 'machine_note').sort(byUpdated);
+  let body = '';
+  if (tab === 'programs') {
+    body = `<div class="toolbar"><span class="muted small">${progs.length} ${esc(t('programs'))}</span>
+      <button class="btn primary sm" data-act="add" data-kind="program" data-mid="${id}">${ic('plus')}${esc(t('addFmt', { x: t('type_program') }))}</button></div>
+      ${progs.length ? `<div class="list">${progs.map(p => {
+        const pal = S.entries.filter(e => e.program_id === p.id && e.kind === 'pallet').length;
+        const pn = S.entries.filter(e => e.program_id === p.id && e.kind === 'program_note').length;
+        return `<a class="row" href="#/p/${p.id}"><div class="thumb">${p.images[0] ? `<img loading="lazy" src="${esc(imgUrl(p.images[0].path))}" alt="">` : ic('program')}</div>
+          <div class="row-main"><div class="row-title">${p.number ? `<span class="code prog-code">${esc(p.number)}</span>` : ''}${esc(p.name)}</div>
+          ${p.description ? `<div class="muted small clamp">${esc(p.description)}</div>` : ''}
+          <div class="stats"><span>${ic('pallet')}${pal}</span><span>${ic('note')}${pn}</span><span>${ic('image')}${p.images.length}</span></div></div>${ic('chevron')}</a>`;
+      }).join('')}</div>` : emptyBox(t('empty'), 'program')}`;
+  } else if (tab === 'alarms') body = entrySection('alarm', alarms, id);
+  else if (tab === 'notes') body = entrySection('machine_note', notes, id);
+  else body = photoSection('machines', m);
+  return `<nav class="crumbs"><a href="#/">${esc(t('machines'))}</a>›<span>${esc(m.name)}</span></nav>
+    <section class="hero"><div class="hero-main"><div class="eyebrow">${esc(t('type_machine'))}</div><h1>${esc(m.name)}</h1>
+      ${m.model || m.location ? `<div class="meta">${m.model ? `<span class="chip">${ic('machine')}${esc(m.model)}</span>` : ''}${m.location ? `<span class="chip">${ic('pin')}${esc(m.location)}</span>` : ''}</div>` : ''}
+      ${m.description ? `<p class="desc">${esc(m.description)}</p>` : ''}</div>${heroActions('machine', m)}</section>
+    ${tabsNav([['programs', t('programs'), progs.length], ['alarms', t('alarms'), alarms.length], ['notes', t('notes'), notes.length], ['photos', t('photos'), m.images.length]], tab)}
+    ${body}`;
+}
+
+function viewProgram(id, params) {
+  const p = S.programs.find(x => x.id === id);
+  if (!p) return emptyBox(t('notFound'), 'search');
+  const m = S.machines.find(x => x.id === p.machine_id);
+  const tab = params.get('tab') || 'pallets';
+  const pallets = S.entries.filter(e => e.program_id === id && e.kind === 'pallet').sort(byCode);
+  const notes = S.entries.filter(e => e.program_id === id && e.kind === 'program_note').sort(byUpdated);
+  const body = tab === 'pallets' ? entrySection('pallet', pallets, p.machine_id, id)
+    : tab === 'notes' ? entrySection('program_note', notes, p.machine_id, id)
+    : photoSection('programs', p);
+  return `<nav class="crumbs"><a href="#/">${esc(t('machines'))}</a>›<a href="#/m/${p.machine_id}?tab=programs">${esc(m?.name || '')}</a>›<span>${esc(progLabel(p))}</span></nav>
+    <section class="hero"><div class="hero-main"><div class="eyebrow">${esc(t('type_program'))}</div>
+      <h1>${p.number ? `<span class="code prog-code" style="font-size:.7em;vertical-align:middle">${esc(p.number)}</span> ` : ''}${esc(p.name)}</h1>
+      <div class="meta"><a class="chip" href="#/m/${p.machine_id}?tab=programs">${ic('machine')}${esc(m?.name || '')}</a></div>
+      ${p.description ? `<p class="desc">${esc(p.description)}</p>` : ''}</div>${heroActions('program', p)}</section>
+    ${tabsNav([['pallets', t('pallets'), pallets.length], ['notes', t('notes'), notes.length], ['photos', t('photos'), p.images.length]], tab)}
+    ${body}`;
+}
+
+function viewSearch(params) {
+  const q = params.get('q') || '';
+  if (!q.trim()) return emptyBox(t('searchHint'), 'search');
+  const { terms, res } = search(q);
+  const groups = [['all', t('all')], ['machine', t('type_machine')], ['program', t('type_program')], ['alarm', t('type_alarm')], ['pallet', t('type_pallet')], ['note', t('type_note')]];
+  const counts = { all: res.length };
+  res.forEach(r => counts[r.group] = (counts[r.group] || 0) + 1);
+  if (S.searchType !== 'all' && !counts[S.searchType]) S.searchType = 'all';
+  const shown = (S.searchType === 'all' ? res : res.filter(r => r.group === S.searchType)).slice(0, 300);
+  if (!res.length) return emptyBox(t('noResults', { q }), 'search');
+  return `<div class="muted small" style="margin-bottom:8px">${esc(t('results', { n: res.length }))}</div>
+    <div class="chips">${groups.filter(([k]) => counts[k]).map(([k, l]) => `<button class="fchip ${S.searchType === k ? 'on' : ''}" data-act="stype" data-v="${k}">${esc(l)} ${counts[k]}</button>`).join('')}</div>
+    <div class="list">${shown.map(r => `<a class="result" href="#${r.go}"><span class="badge b-${r.group}">${esc(t('type_' + r.type))}</span>
+      <div class="r-main"><div class="r-title">${hl(r.title, terms)}</div>${r.crumb ? `<div class="crumb">${hl(r.crumb, terms)}</div>` : ''}
+      ${r.body ? `<div class="r-snip clamp">${hl(snippetOf(r.body, terms), terms)}</div>` : ''}</div>
+      ${r.img ? `<div class="thumb"><img loading="lazy" src="${esc(imgUrl(r.img.path))}" alt=""></div>` : ''}</a>`).join('')}</div>`;
+}
+
+/* ---------------- Shell & routing ---------------- */
+function parseRoute() {
+  const h = location.hash.replace(/^#/, '') || '/';
+  const [path, qs] = h.split('?');
+  return { parts: path.split('/').filter(Boolean), params: new URLSearchParams(qs || '') };
+}
+function renderShell(keep) {
+  const { parts, params } = parseRoute();
+  const qv = parts[0] === 'search' ? (params.get('q') || '') : '';
+  $('#app').innerHTML = `<header class="topbar">
+    <div class="bar"><button class="icon-btn" id="btnBack" data-act="back" aria-label="${esc(t('back'))}">${ic('back')}</button>
+      <a href="#/" class="brand">${ic('machine')}<span>${esc(t('appName'))}</span></a><div class="spacer"></div>
+      ${langSeg()}${themeBtn()}<button class="icon-btn" data-act="menu" aria-label="${esc(t('menu'))}">${ic('menu')}</button></div>
+    <div class="searchrow"><label class="searchbox">${ic('search')}<input id="q" type="search" enterkeyhint="search" autocomplete="off" placeholder="${esc(t('search'))}" value="${esc(qv)}">
+      <button class="icon-btn" id="qClear" type="button" aria-label="${esc(t('close'))}" ${qv ? '' : 'hidden'}>${ic('x')}</button></label></div>
+  </header><main id="main"></main>`;
+  const q = $('#q');
+  let deb;
+  q.addEventListener('input', () => {
+    $('#qClear').hidden = !q.value;
+    clearTimeout(deb);
+    deb = setTimeout(() => {
+      const target = '#/search?q=' + encodeURIComponent(q.value);
+      if (parseRoute().parts[0] === 'search') { history.replaceState(null, '', target); render({ keepScroll: true }); }
+      else if (q.value.trim()) location.hash = target.slice(1);
+    }, 150);
+  });
+  q.addEventListener('keydown', e => { if (e.key === 'Escape') clearSearch(); if (e.key === 'Enter') q.blur(); });
+  $('#qClear').addEventListener('click', e => { e.preventDefault(); clearSearch(); });
+  render({ keepScroll: keep });
+}
+function clearSearch() {
+  const q = $('#q'); if (!q) return;
+  q.value = ''; $('#qClear').hidden = true;
+  if (parseRoute().parts[0] === 'search') { if (history.length > 1) history.back(); else location.hash = '/'; }
+}
+function render(opts = {}) {
+  const main = $('#main'); if (!main) return;
+  const { parts, params } = parseRoute();
+  $('#btnBack').hidden = !parts.length;
+  const openId = !opts.keepScroll ? params.get('open') : null;
+  if (openId) S.open.add(openId);
+  let html;
+  if (S.loadError) html = `<div class="empty">${ic('db', 'big')}<p>${esc(t('loadFail'))}</p><p class="small">${esc(S.loadError)}</p><p><button class="btn" data-act="refresh">${ic('refresh')}${esc(t('retry'))}</button></p></div>`;
+  else if (!S.loaded) html = `<div class="loading"><div class="spinner"></div>${esc(t('loading'))}</div>`;
+  else if (parts[0] === 'm') html = viewMachine(parts[1], params);
+  else if (parts[0] === 'p') html = viewProgram(parts[1], params);
+  else if (parts[0] === 'search') html = viewSearch(params);
+  else html = viewHome();
+  main.innerHTML = html;
+  const q = $('#q');
+  if (q && document.activeElement !== q) { q.value = parts[0] === 'search' ? (params.get('q') || '') : ''; $('#qClear').hidden = !q.value; }
+  if (openId) {
+    const el = document.getElementById('e-' + openId);
+    if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); }
+  } else if (!opts.keepScroll) window.scrollTo(0, 0);
+}
+
+/* ---------------- Event global ---------------- */
+document.addEventListener('click', e => {
+  const ov = e.target.closest('[data-overlay]');
+  if (ov && e.target === ov) return closeModal();
+  if (e.target.closest('#modal-root [data-close]') && !e.target.closest('#frm')) return closeModal();
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const d = el.dataset;
+  switch (d.act) {
+    case 'lang': setLang(d.v); break;
+    case 'theme': closeModal(); toggleTheme(); break;
+    case 'menu': openMenu(); break;
+    case 'back': if (history.length > 1) history.back(); else location.hash = '/'; break;
+    case 'add': openForm(d.kind, null, { machine_id: d.mid || null, program_id: d.pid || null }); break;
+    case 'edit': { const r = getRow(kindTable(d.kind), d.id); if (r) openForm(d.kind, r); break; }
+    case 'del': deleteRecord(d.table, d.id); break;
+    case 'toggle-entry': S.open.has(d.id) ? S.open.delete(d.id) : S.open.add(d.id); render({ keepScroll: true }); break;
+    case 'add-photos': quickAddPhotos(d.table, d.id, d.src === 'camera'); break;
+    case 'lightbox': openLightbox(d.table, d.id, +d.i); break;
+    case 'tab': { const { parts } = parseRoute(); history.replaceState(null, '', `#/${parts[0]}/${parts[1]}?tab=${d.tab}`); render({ keepScroll: true }); break; }
+    case 'stype': S.searchType = d.v; render({ keepScroll: true }); break;
+    case 'refresh': closeModal(); loadAll(); break;
+    case 'logout': closeModal(); sb.auth.signOut(); break;
+    case 'reset-config': resetConfig(); break;
+  }
+});
+document.addEventListener('keydown', e => {
+  if ($('#lb')) {
+    if (e.key === 'Escape') closeLB();
+    else if (e.key === 'ArrowLeft') { LB.i--; renderLB(); }
+    else if (e.key === 'ArrowRight') { LB.i++; renderLB(); }
+  } else if (e.key === 'Escape' && $('#modal-root').innerHTML) closeModal();
+});
+window.addEventListener('hashchange', () => { if (screen === 'app') { closeLB(); render(); } });
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (!LS.get('mct_theme', null)) { applyTheme(); rerender(); } });
+
+boot();
+</script>
+</body>
+</html>
