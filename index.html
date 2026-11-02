@@ -920,7 +920,7 @@ function openMarkup(source) {
 
     cv.addEventListener('pointerdown', e => {
       if (!base || pid !== null || (e.pointerType === 'mouse' && e.button !== 0)) return;
-      e.preventDefault(); pid = e.pointerId; cv.setPointerCapture(pid);
+      e.preventDefault(); pid = e.pointerId; try { cv.setPointerCapture(pid); } catch {}
       cur = { color: PE.color, size: PE.size, pts: [toImg(e)] };
       strokes.push(cur); redraw();
     });
