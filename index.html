@@ -187,6 +187,27 @@ mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
 .auth-logo.img{background:none;overflow:hidden}
 .auth-logo.img img{width:100%;height:100%;display:block}
 .install-btn{color:var(--primary)}
+.imi button.pen{right:auto;left:4px;background:rgba(37,99,235,.9)}
+.imi.busy::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:1}
+.imi.busy::after{content:'';position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;z-index:2}
+.pe{position:fixed;inset:0;z-index:70;background:#0b0f17;color:#fff;display:flex;flex-direction:column;animation:fade .15s;-webkit-user-select:none;user-select:none}
+.pe-top{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px}
+.pe-top h2{flex:1;font-size:16px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-top .icon-btn{color:#fff}
+.pe-top .icon-btn:hover{background:rgba(255,255,255,.12)}
+.pe-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px;touch-action:none;position:relative}
+.pe-stage canvas{max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;border-radius:4px;box-shadow:0 4px 30px rgba(0,0,0,.5);background:#222}
+.pe-stage .spinner{border-color:rgba(255,255,255,.25);border-top-color:#fff;position:absolute}
+.pe-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 14px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#111827;border-top:1px solid #1f2937}
+.pe-group{display:flex;align-items:center;gap:6px}
+.pe-color{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.35);cursor:pointer;padding:0;flex:none}
+.pe-color.on{border-color:#fff;box-shadow:0 0 0 3px rgba(96,165,250,.9)}
+.pe-size{width:36px;height:36px;border-radius:10px;border:1px solid #374151;background:transparent;display:grid;place-items:center;cursor:pointer;padding:0}
+.pe-size.on{background:#1f2937;border-color:#60a5fa}
+.pe-size i{display:block;border-radius:50%;background:#fff}
+.pe-tool{height:36px;padding:0 12px;border-radius:10px;border:1px solid #374151;background:transparent;color:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;cursor:pointer}
+.pe-tool:disabled{opacity:.4;cursor:default}
+.pe-tool.danger{color:#fca5a5}
 .ios-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
 .ios-steps li{line-height:1.5}
 .ios-steps .ic{width:18px;height:18px;vertical-align:-3px;color:var(--primary)}
@@ -254,7 +275,10 @@ const I18N = {
     install: 'Install Aplikasi', installTitle: 'Install di perangkat ini', installDesc: 'Buka MCT Notes seperti aplikasi biasa dari layar utama, tanpa bilah browser.',
     iosStep1: 'Ketuk tombol {icon} Bagikan di Safari.', iosStep2: 'Pilih "Tambah ke Layar Utama".', iosStep3: 'Ketuk "Tambah".',
     manualInstall: 'Buka menu browser (⋮), lalu pilih "Install aplikasi" atau "Tambahkan ke layar utama".', installed: 'Aplikasi berhasil di-install',
-    updateReady: 'Versi baru tersedia', reload: 'Muat ulang'
+    updateReady: 'Versi baru tersedia', reload: 'Muat ulang',
+    markup: 'Tandai', markupTitle: 'Tandai Gambar', undo: 'Urungkan', clearMarks: 'Hapus Semua',
+    compressing: 'Mengompres foto {i}/{n}…', retrying: 'Koneksi lambat, mencoba lagi ({i}/{n})…',
+    confirmDiscard: 'Buang coretan yang belum disimpan?', imgLoadFail: 'Gambar gagal dibuka', imgBusy: 'Foto masih dikompres, tunggu sebentar…'
   },
   ko: {
     appName: 'MCT 기계 노트', search: '전체 검색…', machines: '기계', programs: '프로그램', alarms: '알람',
@@ -279,7 +303,10 @@ const I18N = {
     install: '앱 설치', installTitle: '이 기기에 설치', installDesc: '브라우저 주소창 없이 홈 화면에서 일반 앱처럼 MCT Notes를 실행합니다.',
     iosStep1: 'Safari에서 {icon} 공유 버튼을 탭하세요.', iosStep2: '"홈 화면에 추가"를 선택하세요.', iosStep3: '"추가"를 탭하세요.',
     manualInstall: '브라우저 메뉴(⋮)를 열고 "앱 설치" 또는 "홈 화면에 추가"를 선택하세요.', installed: '앱이 설치되었습니다',
-    updateReady: '새 버전이 있습니다', reload: '새로고침'
+    updateReady: '새 버전이 있습니다', reload: '새로고침',
+    markup: '표시', markupTitle: '이미지에 표시', undo: '실행 취소', clearMarks: '모두 지우기',
+    compressing: '사진 압축 중 {i}/{n}…', retrying: '연결이 느려 다시 시도 중 ({i}/{n})…',
+    confirmDiscard: '저장하지 않은 표시를 버릴까요?', imgLoadFail: '이미지를 열 수 없습니다', imgBusy: '사진을 압축하는 중입니다. 잠시만 기다려 주세요…'
   }
 };
 let lang = LS.get('mct_lang', 'id');
@@ -315,6 +342,8 @@ const ICONS = {
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   link: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
   pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><path d="m15 5 3 3"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
   share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
   db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
@@ -491,34 +520,92 @@ function loadImageEl(file) {
     im.src = u;
   });
 }
-async function compress(file, max = 1600, q = 0.82) {
-  try {
-    let src;
-    try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { src = await loadImageEl(file); }
-    const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
-    const s = Math.min(1, max / Math.max(w, h));
-    const c = document.createElement('canvas');
-    c.width = Math.round(w * s); c.height = Math.round(h * s);
-    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
-    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
-    return blob && blob.size < file.size ? blob : (blob || file);
-  } catch { return file; }
+/* Kompres otomatis: maks. 1920px, target ±450 KB, WebP (atau JPEG jika tidak didukung) */
+const IMG_MAX_DIM = 1920, IMG_TARGET = 450 * 1024;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const canvasToBlob = (c, type, q) => new Promise(r => c.toBlob(r, type, q));
+let webpOK = null;
+async function outType() {
+  if (webpOK === null) {
+    try { const c = document.createElement('canvas'); c.width = c.height = 2; const b = await canvasToBlob(c, 'image/webp', 0.8); webpOK = !!b && b.type === 'image/webp'; }
+    catch { webpOK = false; }
+  }
+  return webpOK ? 'image/webp' : 'image/jpeg';
 }
-async function uploadFiles(table, id, files, onProgress) {
-  const out = [];
-  try {
-    for (let i = 0; i < files.length; i++) {
-      onProgress && onProgress(i + 1, files.length);
-      const blob = await compress(files[i]);
-      const type = blob.type || 'image/jpeg';
-      const ext = (type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-      const path = `${table}/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: type, cacheControl: '31536000', upsert: false });
-      if (error) throw error;
-      out.push({ path });
-    }
-  } catch (err) { removePaths(out.map(x => x.path)); throw err; }
+async function decodeImage(src) {
+  try { return await createImageBitmap(src, { imageOrientation: 'from-image' }); }
+  catch { return await loadImageEl(src); }
+}
+async function encodeCanvas(c) {
+  const type = await outType();
+  let q = 0.82, b = null;
+  for (;;) {
+    b = await canvasToBlob(c, type, q);
+    if (!b || b.size <= IMG_TARGET || q <= 0.5) break;
+    q = Math.round((q - 0.1) * 100) / 100;
+  }
+  return b;
+}
+function drawScaled(src, max) {
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  const sc = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+async function compressImage(file) {
+  let src;
+  try { src = await decodeImage(file); }
+  catch { if (file.size <= 8 * 1024 * 1024) return file; throw new Error(t('imgLoadFail')); }
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  let c = drawScaled(src, IMG_MAX_DIM);
+  try { src.close && src.close(); } catch {}
+  let blob = await encodeCanvas(c);
+  if (blob && blob.size > IMG_TARGET * 2) { c = drawScaled(c, Math.round(Math.max(c.width, c.height) * 0.75)); blob = await encodeCanvas(c) || blob; }
+  c.width = c.height = 0;
+  if (!blob) return file;
+  const small = Math.max(w, h) <= IMG_MAX_DIM && /^image\/(jpeg|webp)$/.test(file.type) && file.size <= blob.size;
+  return small ? file : blob;
+}
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length); let next = 0;
+  const worker = async () => { while (next < items.length) { const i = next++; out[i] = await fn(items[i], i); } };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   return out;
+}
+async function compressFiles(files, onProgress) {
+  let done = 0;
+  return mapLimit(files, 2, async f => { const b = await compressImage(f); onProgress && onProgress(++done, files.length); return b; });
+}
+const extOf = type => ({ 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/heic': 'heic' }[type] || 'jpg');
+async function uploadOne(table, id, blob, onRetry) {
+  const type = blob.type || 'image/jpeg';
+  const path = `${table}/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extOf(type)}`;
+  let lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: type, cacheControl: '31536000', upsert: true });
+      if (!error) return { path };
+      lastErr = error;
+    } catch (err) { lastErr = err; }
+    if (attempt < 3) { onRetry && onRetry(attempt + 1, 3); await sleep(1200 * attempt); }
+  }
+  throw lastErr || new Error('upload');
+}
+/* Upload paralel (3 sekaligus) + coba ulang otomatis */
+async function uploadBlobs(table, id, blobs, onProgress) {
+  const ok = []; let done = 0;
+  try {
+    return await mapLimit(blobs, 3, async b => {
+      const r = await uploadOne(table, id, b, (i, n) => toast(t('retrying', { i, n }), '', true));
+      ok.push(r.path); onProgress && onProgress(++done, blobs.length);
+      return r;
+    });
+  } catch (err) { removePaths(ok); throw err; }
 }
 async function removePaths(paths) {
   paths = paths.filter(Boolean);
@@ -526,20 +613,43 @@ async function removePaths(paths) {
     try { await sb.storage.from(BUCKET).remove(paths.slice(i, i + 100)); } catch (e) { console.warn(e); }
   }
 }
+async function saveImages(table, id, images) {
+  const { data, error } = await sb.from(table).update({ images, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+  if (error) throw error;
+  replaceLocal(table, data);
+}
 async function quickAddPhotos(table, id, camera) {
   const files = await pickFiles(camera);
   if (!files.length) return;
-  const row = getRow(table, id); if (!row) return;
   let uploaded = [];
   try {
-    uploaded = await uploadFiles(table, id, files, (i, n) => toast(t('uploading', { i, n }), '', true));
-    const images = [...row.images, ...uploaded];
-    const { data, error } = await sb.from(table).update({ images, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-    if (error) throw error;
-    replaceLocal(table, data); render({ keepScroll: true }); toast(t('saved'));
+    const blobs = await compressFiles(files, (i, n) => toast(t('compressing', { i, n }), '', true));
+    uploaded = await uploadBlobs(table, id, blobs, (i, n) => toast(t('uploading', { i, n }), '', true));
+    const row = getRow(table, id); if (!row) throw new Error(t('notFound'));
+    await saveImages(table, id, [...row.images, ...uploaded]);
+    render({ keepScroll: true }); toast(t('saved'));
   } catch (err) {
     removePaths(uploaded.map(x => x.path));
-    toast(t('error', { msg: err.message }), 'error');
+    toast(t('error', { msg: err.message || String(err) }), 'error');
+  }
+}
+async function markupStored(table, id, index) {
+  const row = getRow(table, id); const img = row?.images[index]; if (!img) return;
+  const blob = await openMarkup(imgUrl(img.path));
+  if (!blob) return;
+  let up;
+  try {
+    toast(t('saving'), '', true);
+    up = await uploadOne(table, id, blob, (i, n) => toast(t('retrying', { i, n }), '', true));
+    const cur = getRow(table, id);
+    const images = cur.images.map((im, i) => i === index && im.path === img.path ? up : im);
+    await saveImages(table, id, images);
+    removePaths([img.path]);
+    render({ keepScroll: true }); toast(t('saved'));
+    if ($('#lb')) renderLB();
+  } catch (err) {
+    if (up) removePaths([up.path]);
+    toast(t('error', { msg: err.message || String(err) }), 'error');
   }
 }
 async function deletePhoto(table, id, index) {
@@ -610,7 +720,13 @@ function closeModal() {
 function openForm(kind, row, ctx = {}) {
   const fields = FORM_DEF[kind]; if (!fields) return;
   const table = kindTable(kind), isNew = !row;
-  const st = { kept: [...(row?.images || [])], removed: [], files: [] };
+  // items: foto lama { img } atau foto baru { blob, url, busy, ready }
+  const st = { items: (row?.images || []).map(img => ({ img })), removed: [] };
+  const addNew = file => {
+    const it = { blob: null, url: URL.createObjectURL(file), busy: true };
+    it.ready = compressImage(file).then(b => { it.blob = b; }).catch(() => { it.blob = file; }).finally(() => { it.busy = false; drawImgs(); });
+    st.items.push(it);
+  };
   const label = t('type_' + kind);
   showModal(`<div class="overlay"><form class="modal" id="frm" novalidate>
     <div class="modal-head"><h2>${esc(isNew ? t('addFmt', { x: label }) : t('editFmt', { x: label }))}</h2><button type="button" class="icon-btn" data-close aria-label="${esc(t('close'))}">${ic('x')}</button></div>
@@ -624,13 +740,15 @@ function openForm(kind, row, ctx = {}) {
       </div>
     </div>
     <div class="modal-foot"><span class="progress muted small" id="prog"></span><button type="button" class="btn ghost" data-close>${esc(t('cancel'))}</button><button type="submit" class="btn primary" id="btnSave">${esc(t('save'))}</button></div>
-  </form></div>`, () => st.files.forEach(f => URL.revokeObjectURL(f.url)));
+  </form></div>`, () => st.items.forEach(it => it.url && URL.revokeObjectURL(it.url)));
 
   const form = $('#frm');
   const drawImgs = () => {
-    $('#imgmgr').innerHTML =
-      st.kept.map((im, i) => `<div class="imi"><img src="${esc(imgUrl(im.path))}" alt=""><button type="button" data-rm-kept="${i}">${ic('x')}</button></div>`).join('') +
-      st.files.map((f, i) => `<div class="imi new"><img src="${f.url}" alt=""><button type="button" data-rm-new="${i}">${ic('x')}</button></div>`).join('');
+    const box = $('#imgmgr'); if (!box) return;
+    box.innerHTML = st.items.map((it, i) => `<div class="imi ${it.img ? '' : 'new'} ${it.busy ? 'busy' : ''}">
+      <img src="${it.img ? esc(imgUrl(it.img.path)) : it.url}" alt="">
+      ${it.busy ? '' : `<button type="button" class="pen" data-pen="${i}" title="${esc(t('markup'))}">${ic('pen')}</button>`}
+      <button type="button" data-rm="${i}" title="${esc(t('delete'))}">${ic('x')}</button></div>`).join('');
   };
   drawImgs();
   form.addEventListener('click', async e => {
@@ -638,12 +756,19 @@ function openForm(kind, row, ctx = {}) {
     if (b.hasAttribute('data-close')) return closeModal();
     if (b.dataset.pick) {
       const files = await pickFiles(b.dataset.pick === 'camera');
-      files.forEach(file => st.files.push({ file, url: URL.createObjectURL(file) }));
+      files.forEach(addNew);
       drawImgs();
-    } else if (b.dataset.rmKept !== undefined) {
-      st.removed.push(...st.kept.splice(+b.dataset.rmKept, 1)); drawImgs();
-    } else if (b.dataset.rmNew !== undefined) {
-      const [f] = st.files.splice(+b.dataset.rmNew, 1); URL.revokeObjectURL(f.url); drawImgs();
+    } else if (b.dataset.rm !== undefined) {
+      const [it] = st.items.splice(+b.dataset.rm, 1);
+      if (it.img) st.removed.push(it.img); else URL.revokeObjectURL(it.url);
+      drawImgs();
+    } else if (b.dataset.pen !== undefined) {
+      const it = st.items[+b.dataset.pen]; if (!it || it.busy) return;
+      const out = await openMarkup(it.img ? imgUrl(it.img.path) : it.blob);
+      if (!out || !st.items.includes(it)) return;
+      if (it.img) { st.removed.push(it.img); delete it.img; } else URL.revokeObjectURL(it.url);
+      it.blob = out; it.url = URL.createObjectURL(out); it.ready = Promise.resolve();
+      drawImgs();
     }
   });
   setTimeout(() => form.querySelector(isNew ? 'input' : 'textarea, input')?.focus(), 50);
@@ -661,10 +786,13 @@ function openForm(kind, row, ctx = {}) {
     const id = row?.id || uuid();
     let uploaded = [];
     try {
-      uploaded = await uploadFiles(table, id, st.files.map(f => f.file), (i, n) => prog.textContent = t('uploading', { i, n }));
+      const fresh = st.items.filter(it => !it.img);
+      if (fresh.some(it => it.busy)) { prog.textContent = t('compressing', { i: fresh.filter(it => !it.busy).length, n: fresh.length }); await Promise.all(fresh.map(it => it.ready)); }
+      uploaded = await uploadBlobs(table, id, fresh.map(it => it.blob), (i, n) => prog.textContent = t('uploading', { i, n }));
       prog.textContent = t('saving');
       const now = new Date().toISOString();
-      const images = [...st.kept, ...uploaded];
+      let k = 0;
+      const images = st.items.map(it => it.img || uploaded[k++]);
       let res;
       if (isNew) {
         const payload = { id, ...vals, images, created_at: now, updated_at: now };
@@ -732,16 +860,135 @@ function renderLB() {
       else if (a === 'prev') { LB.i--; renderLB(); }
       else if (a === 'next') { LB.i++; renderLB(); }
       else if (a === 'del') deletePhoto(LB.table, LB.id, LB.i);
+      else if (a === 'pen') markupStored(LB.table, LB.id, LB.i);
     });
   }
   const url = imgUrl(imgs[LB.i].path);
   el.innerHTML = `<div class="lb-top"><span>${LB.i + 1} / ${imgs.length}</span><div class="actions">
       <a class="icon-btn" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(t('open'))}">${ic('link')}</a>
+      <button class="icon-btn" data-lb="pen" title="${esc(t('markup'))}">${ic('pen')}</button>
       <button class="icon-btn" data-lb="del" title="${esc(t('delete'))}">${ic('trash')}</button>
       <button class="icon-btn" data-lb="close" title="${esc(t('close'))}">${ic('x')}</button></div></div>
     <div class="lb-stage">${imgs.length > 1 ? `<button class="lb-nav lb-prev" data-lb="prev">${ic('left')}</button>` : ''}
       <img src="${esc(url)}" alt="">
       ${imgs.length > 1 ? `<button class="lb-nav lb-next" data-lb="next">${ic('chevron')}</button>` : ''}</div>`;
+}
+
+/* ---------------- Editor pen (tandai gambar) ---------------- */
+const PE_COLORS = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#a855f7', '#ffffff', '#111827'];
+const PE_SIZES = [0.004, 0.008, 0.016];
+const PE = { color: LS.get('mct_pen_color', '#ef4444'), size: LS.get('mct_pen_size', 1) };
+function openMarkup(source) {
+  return new Promise(resolve => {
+    const el = document.createElement('div');
+    el.id = 'pe'; el.className = 'pe';
+    el.innerHTML = `<div class="pe-top">
+        <button class="icon-btn" data-pe="cancel" title="${esc(t('cancel'))}">${ic('x')}</button>
+        <h2>${esc(t('markupTitle'))}</h2>
+        <button class="btn primary sm" data-pe="save" disabled>${esc(t('save'))}</button></div>
+      <div class="pe-stage"><div class="spinner"></div><canvas hidden></canvas></div>
+      <div class="pe-bar">
+        <div class="pe-group">${PE_COLORS.map(c => `<button class="pe-color" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>
+        <div class="pe-group">${PE_SIZES.map((_, i) => `<button class="pe-size" data-size="${i}"><i style="width:${6 + i * 5}px;height:${6 + i * 5}px"></i></button>`).join('')}</div>
+        <div class="pe-group"><button class="pe-tool" data-pe="undo">${ic('undo')}${esc(t('undo'))}</button><button class="pe-tool danger" data-pe="clear">${ic('trash')}${esc(t('clearMarks'))}</button></div>
+      </div>`;
+    document.body.appendChild(el);
+    document.body.classList.add('lock');
+    const cv = el.querySelector('canvas'), g = cv.getContext('2d');
+    const btnSave = el.querySelector('[data-pe=save]'), btnUndo = el.querySelector('[data-pe=undo]'), btnClear = el.querySelector('[data-pe=clear]');
+    let base = null, strokes = [], history = [], cur = null, pid = null;
+
+    const syncUI = () => {
+      el.querySelectorAll('.pe-color').forEach(b => b.classList.toggle('on', b.dataset.color === PE.color));
+      el.querySelectorAll('.pe-size').forEach(b => b.classList.toggle('on', +b.dataset.size === PE.size));
+      btnUndo.disabled = !history.length; btnClear.disabled = !strokes.length;
+      btnSave.disabled = !base || !strokes.length;
+    };
+    const lw = s => Math.max(2, PE_SIZES[s.size] * Math.max(cv.width, cv.height));
+    const drawStroke = s => {
+      g.strokeStyle = g.fillStyle = s.color; g.lineWidth = lw(s); g.lineCap = g.lineJoin = 'round';
+      if (s.pts.length === 1) { g.beginPath(); g.arc(s.pts[0][0], s.pts[0][1], lw(s) / 2, 0, Math.PI * 2); g.fill(); return; }
+      g.beginPath(); g.moveTo(s.pts[0][0], s.pts[0][1]);
+      for (let i = 1; i < s.pts.length - 1; i++) {
+        const [x1, y1] = s.pts[i], [x2, y2] = s.pts[i + 1];
+        g.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+      }
+      const last = s.pts[s.pts.length - 1]; g.lineTo(last[0], last[1]); g.stroke();
+    };
+    const redraw = () => { if (!base) return; g.drawImage(base, 0, 0); strokes.forEach(drawStroke); };
+    const toImg = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+
+    cv.addEventListener('pointerdown', e => {
+      if (!base || pid !== null || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault(); pid = e.pointerId; cv.setPointerCapture(pid);
+      cur = { color: PE.color, size: PE.size, pts: [toImg(e)] };
+      strokes.push(cur); redraw();
+    });
+    cv.addEventListener('pointermove', e => {
+      if (e.pointerId !== pid || !cur) return;
+      e.preventDefault();
+      const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      (evs.length ? evs : [e]).forEach(ev => cur.pts.push(toImg(ev)));
+      redraw();
+    });
+    const endStroke = e => {
+      if (e.pointerId !== pid) return;
+      pid = null;
+      if (cur) { history.push({ type: 'stroke' }); cur = null; }
+      syncUI();
+    };
+    cv.addEventListener('pointerup', endStroke);
+    cv.addEventListener('pointercancel', endStroke);
+
+    const undo = () => {
+      const h = history.pop(); if (!h) return;
+      if (h.type === 'stroke') strokes.pop(); else strokes = h.prev;
+      redraw(); syncUI();
+    };
+    const finish = out => {
+      document.removeEventListener('keydown', onKey, true);
+      el.remove();
+      if (!$('#lb') && !$('#modal-root').innerHTML) document.body.classList.remove('lock');
+      resolve(out);
+    };
+    const cancel = () => { if (strokes.length && !confirm(t('confirmDiscard'))) return; finish(null); };
+    const onKey = e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.stopPropagation(); undo(); }
+    };
+    document.addEventListener('keydown', onKey, true);
+
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.color) { PE.color = b.dataset.color; LS.set('mct_pen_color', PE.color); syncUI(); return; }
+      if (b.dataset.size !== undefined) { PE.size = +b.dataset.size; LS.set('mct_pen_size', PE.size); syncUI(); return; }
+      const a = b.dataset.pe;
+      if (a === 'cancel') cancel();
+      else if (a === 'undo') undo();
+      else if (a === 'clear') { if (!strokes.length) return; history.push({ type: 'clear', prev: strokes }); strokes = []; redraw(); syncUI(); }
+      else if (a === 'save') {
+        b.disabled = true;
+        try { const out = await encodeCanvas(cv); if (!out) throw new Error('encode'); finish(out); }
+        catch (err) { b.disabled = false; toast(t('error', { msg: err.message }), 'error'); }
+      }
+    });
+
+    (async () => {
+      try {
+        let blob = source;
+        if (typeof source === 'string') { const r = await fetch(source, { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); blob = await r.blob(); }
+        const img = await decodeImage(blob);
+        base = drawScaled(img, IMG_MAX_DIM);
+        try { img.close && img.close(); } catch {}
+        cv.width = base.width; cv.height = base.height;
+        cv.hidden = false; el.querySelector('.spinner').remove();
+        redraw(); syncUI();
+      } catch (err) {
+        toast(t('imgLoadFail'), 'error'); finish(null);
+      }
+    })();
+    syncUI();
+  });
 }
 
 /* ---------------- Pencarian global ---------------- */
@@ -1007,6 +1254,7 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('keydown', e => {
+  if ($('#pe')) return;
   if ($('#lb')) {
     if (e.key === 'Escape') closeLB();
     else if (e.key === 'ArrowLeft') { LB.i--; renderLB(); }
