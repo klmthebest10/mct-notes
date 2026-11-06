@@ -409,16 +409,13 @@ async function boot() {
   try {
     sb = window.supabase.createClient(cfg.url, cfg.key);
   } catch (err) { screen = 'setup'; return renderSetup(err.message); }
-  sb.auth.onAuthStateChange(ev => {
-    if (ev === 'SIGNED_OUT') { S.loaded = false; S.user = null; screen = 'login'; closeModal(); renderLogin(); }
-  });
   let session = null;
   try { session = (await sb.auth.getSession()).data.session; } catch {}
-  if (!session) { screen = 'login'; return renderLogin(); }
+  // Mode tanpa login: langsung masuk aplikasi
   startApp(session);
 }
 function startApp(session) {
-  S.user = session.user; screen = 'app';
+  S.user = session?.user || null; screen = 'app';
   renderShell(); loadAll();
 }
 function rerender() {
@@ -829,7 +826,7 @@ function openMenu() {
         <button class="btn" data-act="refresh">${ic('refresh')}${esc(t('refresh'))}</button>
         <button class="btn" data-act="theme">${ic(effectiveTheme() === 'dark' ? 'sun' : 'moon')}${esc(effectiveTheme() === 'dark' ? t('lightMode') : t('darkMode'))}</button>
         ${cfg && !cfg.fixed ? `<button class="btn" data-act="reset-config">${ic('db')}${esc(t('resetConfig'))}</button>` : ''}
-        <button class="btn danger" data-act="logout">${ic('logout')}${esc(t('logout'))}</button>
+        ${S.user ? `<button class="btn danger" data-act="logout">${ic('logout')}${esc(t('logout'))}</button>` : ''}
       </div>
     </div></div></div>`);
 }
@@ -1247,7 +1244,7 @@ document.addEventListener('click', e => {
     case 'tab': { const { parts } = parseRoute(); history.replaceState(null, '', `#/${parts[0]}/${parts[1]}?tab=${d.tab}`); render({ keepScroll: true }); break; }
     case 'stype': S.searchType = d.v; render({ keepScroll: true }); break;
     case 'refresh': closeModal(); loadAll(); break;
-    case 'logout': closeModal(); sb.auth.signOut(); break;
+    case 'logout': closeModal(); sb.auth.signOut().finally(() => { S.user = null; renderShell(true); }); break;
     case 'reset-config': resetConfig(); break;
     case 'install': closeModal(); doInstall(); break;
     case 'reload-app': location.reload(); break;

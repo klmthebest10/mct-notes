@@ -1,5 +1,5 @@
 /* Service worker MCT Notes — ganti VERSION setiap kali file aplikasi diubah */
-const VERSION = 'mct-v2';
+const VERSION = 'mct-v3';
 const SHELL = [
   './',
   './index.html',
